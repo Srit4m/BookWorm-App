@@ -12,6 +12,9 @@ import { connectDB } from "./lib/db.js";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy for Railway deployment (required for express-rate-limit)
+app.set('trust proxy', 1);
+
 // Ensure the app binds to 0.0.0.0 for Railway
 const HOST = "0.0.0.0";
 
