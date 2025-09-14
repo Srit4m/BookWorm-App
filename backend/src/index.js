@@ -54,7 +54,21 @@ const authLimiter = rateLimit({
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
-  res.json({ status: "OK", message: "Server is running" });
+  res.status(200).json({ 
+    status: "OK", 
+    message: "Server is running",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// Root endpoint for basic health check
+app.get("/", (req, res) => {
+  res.status(200).json({ 
+    status: "OK", 
+    message: "BookWorm API is running",
+    timestamp: new Date().toISOString()
+  });
 });
 
 app.use("/api/auth", authLimiter, authRoutes);
@@ -62,5 +76,9 @@ app.use("/api/books", bookRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
-  connectDB();
+  // Connect to database, but don't fail if it's not available
+  connectDB().catch(err => {
+    console.warn("Database connection failed:", err.message);
+    console.log("Server will continue running without database connection");
+  });
 });

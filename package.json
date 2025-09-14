@@ -10,7 +10,11 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "keywords": ["bookworm", "api", "backend"],
+  "keywords": [
+    "bookworm",
+    "api",
+    "backend"
+  ],
   "author": "",
   "license": "ISC"
 }
