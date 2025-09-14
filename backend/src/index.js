@@ -12,6 +12,9 @@ import { connectDB } from "./lib/db.js";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Ensure the app binds to 0.0.0.0 for Railway
+const HOST = "0.0.0.0";
+
 job.start();
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -54,30 +57,30 @@ const authLimiter = rateLimit({
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
-  res.status(200).json({ 
-    status: "OK", 
+  res.status(200).json({
+    status: "OK",
     message: "Server is running",
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
   });
 });
 
 // Root endpoint for basic health check
 app.get("/", (req, res) => {
-  res.status(200).json({ 
-    status: "OK", 
+  res.status(200).json({
+    status: "OK",
     message: "BookWorm API is running",
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
 app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/books", bookRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`Server is running on ${HOST}:${PORT}`);
   // Connect to database, but don't fail if it's not available
-  connectDB().catch(err => {
+  connectDB().catch((err) => {
     console.warn("Database connection failed:", err.message);
     console.log("Server will continue running without database connection");
   });
