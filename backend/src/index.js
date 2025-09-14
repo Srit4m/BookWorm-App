@@ -1,0 +1,66 @@
+import express from "express";
+import cors from "cors";
+import rateLimit from "express-rate-limit";
+import "dotenv/config";
+import job from "./lib/cron.js";
+
+import authRoutes from "./routes/authRoutes.js";
+import bookRoutes from "./routes/bookRoutes.js";
+
+import { connectDB } from "./lib/db.js";
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+job.start();
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+// CORS configuration
+const corsOptions = {
+  origin:
+    process.env.NODE_ENV === "production"
+      ? ["https://your-production-domain.com"] // Replace with your actual production domain
+      : [
+          "http://localhost:3000",
+          "http://localhost:8081",
+          "exp://localhost:8081",
+        ], // Development URLs
+  credentials: true,
+  optionsSuccessStatus: 200,
+};
+app.use(cors(corsOptions));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: "Too many requests from this IP, please try again later.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply rate limiting to all requests
+app.use(limiter);
+
+// Stricter rate limiting for auth routes
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // limit each IP to 5 auth requests per windowMs
+  message: "Too many authentication attempts, please try again later.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.json({ status: "OK", message: "Server is running" });
+});
+
+app.use("/api/auth", authLimiter, authRoutes);
+app.use("/api/books", bookRoutes);
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+  connectDB();
+});
